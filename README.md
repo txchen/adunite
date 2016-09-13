@@ -1,0 +1,2 @@
+# adunite
+cordova-plugin-adunite

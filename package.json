@@ -1,0 +1,22 @@
+{
+  "name": "cordova-plugin-adunite",
+  "version": "1.0.0",
+  "description": "show full screen ads in your cordova app",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/txchen/ad-gap.git"
+  },
+  "cordova": {
+    "id": "cordova-plugin-adunite",
+    "platforms": [
+      "android"
+    ]
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/txchen/adunite/issues"
+  },
+  "homepage": "https://github.com/txchen/adunite#readme"
+}

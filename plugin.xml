@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:rim="http://www.blackberry.com/ns/widgets"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    id="cordova-plugin-adunite"
+    version="1.0.0">
+
+    <name>AdUnite</name>
+    <description>AdUnite plugin</description>
+    <license>MIT</license>
+    <keywords>cordova,adunite,ads,ad</keywords>
+    <repo>https://github.com/txchen/adunite</repo>
+    <issue>https://github.com/txchen/adunite/issues</issue>
+
+    <js-module src="www/adunite.js" name="adunite">
+        <clobbers target="adunite" />
+    </js-module>
+
+    <js-module src="www/intenthelper.js" name="intenthelper">
+        <clobbers target="intenthelper" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="Adunite">
+                <param name="android-package" value="com.adunite.Adunite"/>
+            </feature>
+            <feature name="Intenthelper">
+                <param name="android-package" value="com.adunite.Intenthelper"/>
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+            <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+            <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+        </config-file>
+
+        <source-file src="src/android/Adunite.java" target-dir="src/com/adunite/"/>
+        <source-file src="src/android/Intenthelper.java" target-dir="src/com/adunite/"/>
+        <source-file src="src/android/AudienceNetwork.aar" target-dir="libs" framework="true" />
+        <source-file src="build-extras.gradle" target-dir="."/>
+    </platform>
+
+</plugin>

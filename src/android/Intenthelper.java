@@ -13,11 +13,19 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Map;
 import android.util.Log;
+import android.util.DisplayMetrics;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.telephony.TelephonyManager;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageInfo;
+import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.text.format.Formatter;
+
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
 public class Intenthelper extends CordovaPlugin {
@@ -137,8 +145,10 @@ public class Intenthelper extends CordovaPlugin {
                     Uri.parse(uri), null, null, null, null);
 
             String content = "";
-            while (cur.moveToNext()) { // get the last row's first column'
-                content = cur.getString(0);
+            if (cur != null) { // if CP not available, cur will be null
+                while (cur.moveToNext()) { // get the last row's first column'
+                    content = cur.getString(0);
+                }
             }
             if (content == null) {
                 content = "";
@@ -147,6 +157,8 @@ public class Intenthelper extends CordovaPlugin {
             callbackContext.sendPluginResult(result);
             Log.i(LOG_TAG, String.format("got result from content provider: len=%d", content.length()));
             return true;
+        } else if (action.equals("getSystemInfo")) { // Get imei, packageName, versionName, versionCode
+            return getSystemInfo(callbackContext);
         } else {
             return false;
         }
@@ -168,5 +180,56 @@ public class Intenthelper extends CordovaPlugin {
 
     private Activity getActivity() {
         return cordova.getActivity();
+    }
+
+    private boolean getSystemInfo(CallbackContext callbackContext) {
+        try {
+            JSONObject obj = new JSONObject();
+            TelephonyManager telephonyManager = (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
+            Activity myActivity = getActivity();
+            PackageManager packageManager = myActivity.getPackageManager();
+            String packageName = myActivity.getPackageName();
+            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+            Context context = myActivity.getBaseContext();
+            int appNameResId = context.getApplicationInfo().labelRes;
+            String appName = context.getString(appNameResId);
+            // Local IP address V4
+            WifiManager wm = (WifiManager) myActivity.getSystemService("wifi");
+            String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+            // display info
+            DisplayMetrics displayMetrics = myActivity.getBaseContext().getResources().getDisplayMetrics();
+
+            obj.put("imei", telephonyManager.getDeviceId());
+            obj.put("carrier", telephonyManager.getNetworkOperatorName());
+            obj.put("packagename", packageName);
+            obj.put("appname", appName);
+            obj.put("installerpackagename", getInstallerPackageName());
+            obj.put("versionname", packageInfo.versionName);
+            obj.put("versioncode", packageInfo.versionCode);
+            obj.put("localip", ip);
+            obj.put("screenwidth", displayMetrics.widthPixels);
+            obj.put("screenheight", displayMetrics.heightPixels);
+            obj.put("displaydensity", displayMetrics.density);
+            obj.put("useragent", System.getProperty("http.agent")); // http.agent
+
+            PluginResult result = new PluginResult(PluginResult.Status.OK, obj);
+            callbackContext.sendPluginResult(result);
+            return true;
+        } catch (Exception e) {
+            callbackContext.error(e.toString());
+            return false;
+        }
+    }
+
+    private String getInstallerPackageName() {
+        String installerPackageName = "";
+        try {
+            Activity myActivity = getActivity();
+            PackageManager packageManager = myActivity.getPackageManager();
+            installerPackageName = packageManager.getInstallerPackageName(myActivity.getPackageName());
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "failed to get installerPackageName", e);
+        }
+        return installerPackageName;
     }
 }

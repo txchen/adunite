@@ -85,5 +85,8 @@ module.exports = {
   },
   getContentProvider: function(uri, successCallback, errorCallback) {
     cordova.exec(successCallback, errorCallback, 'Intenthelper', 'getContentProvider', [uri])
+  },
+  getSystemInfo: function (successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, 'Intenthelper', 'getSystemInfo', [])
   }
 }

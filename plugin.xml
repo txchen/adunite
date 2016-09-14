@@ -51,6 +51,7 @@
         <source-file src="src/android/Adunite.java" target-dir="src/com/adunite/"/>
         <source-file src="src/android/Intenthelper.java" target-dir="src/com/adunite/"/>
         <source-file src="src/android/AudienceNetwork.aar" target-dir="libs" framework="true" />
+        <source-file src="src/android/unity-ads.aar" target-dir="libs" framework="true" />
         <source-file src="build-extras.gradle" target-dir="."/>
     </platform>
 

@@ -54,6 +54,9 @@ public class Adunite extends CordovaPlugin {
             _aduniteCallbackContext = callbackContext;
             initAdunite(callbackContext, data.optString(0));
             //, data.optString(0), data.optBoolean(1), data.optBoolean(2), data.optBoolean(3));
+            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject());
+            result.setKeepCallback(true);
+            _aduniteCallbackContext.sendPluginResult(result);
             return true;
         } else if (action.equals("loadAds")) {
             return loadAds(callbackContext, data);
@@ -64,7 +67,8 @@ public class Adunite extends CordovaPlugin {
 
     private void initAdunite(CallbackContext callbackContext, final String unityGameId) {
         // some sdk requires init before using
-        if (unityGameId != null && !"".equals(unityGameId)) {
+        if ((unityGameId != null) && (!"".equals(unityGameId)) && (!"null".equals(unityGameId))) {
+            Log.w(LOG_TAG, "unity ads is enabled, init it with GameId: " + unityGameId);
             _unityAdsListener = new UnityAdsListener();
             UnityAds.setListener(_unityAdsListener);
             UnityAds.initialize(getActivity(), unityGameId, _unityAdsListener);
@@ -77,6 +81,8 @@ public class Adunite extends CordovaPlugin {
 
         if ("fban".equals(networkName)) {
             loadFBAds(pid);
+        } else if ("unity".equals(networkName)) {
+            // no op
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -103,22 +109,19 @@ public class Adunite extends CordovaPlugin {
 
     // FBAN
     private void loadFBAds(final String pid) {
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (_fbInterstitialAd != null) {
-                    _fbReady = false;
-                    _fbInterstitialAd.destroy();
-                }
-                _fbInterstitialAd = new InterstitialAd(getActivity(), pid);
-                _fbInterstitialAd.setAdListener(new FBInterstitialAdListener());
-                _fbInterstitialAd.loadAd();
-            }
-        });
+        Log.i(LOG_TAG, "Trying to load fban ads, pid=" + pid);
+        if (_fbInterstitialAd != null) {
+            _fbReady = false;
+            _fbInterstitialAd.destroy();
+        }
+        _fbInterstitialAd = new InterstitialAd(getActivity(), pid);
+        _fbInterstitialAd.setAdListener(new FBInterstitialAdListener());
+        _fbInterstitialAd.loadAd();
     }
 
     private void showFBAds() {
-        if (_fbReady) {
+        Log.i(LOG_TAG, "Trying to show fban ads");
+        if (_fbReady && _fbInterstitialAd != null) {
             _fbInterstitialAd.show();
         } else {
             // TODO: return error to js layer
@@ -147,7 +150,7 @@ public class Adunite extends CordovaPlugin {
     }
 
     private void sendAdsEventToJs(String networkName, String eventName, String eventDetail) {
-        Log.w(LOG_TAG, String.format("%s - %s - %s", networkName, eventName, eventDetail));
+        Log.w(LOG_TAG, String.format("Emit AdsEvent: %s - %s - %s", networkName, eventName, eventDetail));
         PluginResult result = new PluginResult(PluginResult.Status.OK, buildAdsEvent(networkName, eventName, eventDetail));
         result.setKeepCallback(true);
         if (_aduniteCallbackContext != null) {
@@ -190,7 +193,7 @@ public class Adunite extends CordovaPlugin {
 
         @Override
         public void onUnityAdsError(UnityAds.UnityAdsError error, String message) {
-            sendAdsEventToJs("unity", "ERROR", error.toString() + "-" + message);
+            sendAdsEventToJs("unity", "LOADERROR", error.toString() + "-" + message);
         }
         // Unity Ads has no Clicked event
     }
@@ -209,7 +212,7 @@ public class Adunite extends CordovaPlugin {
 
         @Override
         public void onError(Ad ad, AdError error) {
-            sendAdsEventToJs("fban", "ERROR", String.valueOf(error.getErrorCode()));
+            sendAdsEventToJs("fban", "LOADERROR", String.valueOf(error.getErrorCode()));
         }
 
         @Override

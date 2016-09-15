@@ -116,15 +116,18 @@ module.exports = {
     successCallback(this._adsOptions)
   },
 
-  showAds: function (successCallback, errorCallback) {
+  showAds: function (delay, successCallback, errorCallback) {
     // get all the available ads, based on java layer and showCooldown
     // then based on weight, pick one of them.
+    delay = delay < 0 ? 0 : delay
     var networkToShow = this.pickNextAdsToShow()
     if (networkToShow) {
       this._adsStates[networkToShow].ready = false
       this._adsStates[networkToShow].lastShown = new Date().getTime()
-      cordova.exec(successCallback, errorCallback,
-        'Adunite', 'showAds', [ networkToShow ])
+      setTimeout(function () {
+          cordova.exec(successCallback, errorCallback,
+            'Adunite', 'showAds', [ networkToShow ])
+        }, delay)
     } else {
       errorCallback('no ready ads to show')
     }

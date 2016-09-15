@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-adunite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "show full screen ads in your cordova app",
   "scripts": {
   },

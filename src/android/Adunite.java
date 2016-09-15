@@ -38,10 +38,8 @@ public class Adunite extends CordovaPlugin {
     private CallbackContext _aduniteCallbackContext;
 
     private InterstitialAd _fbInterstitialAd;
-    private volatile boolean _fbReady = false;
 
     private UnityAdsListener _unityAdsListener;
-    private volatile boolean _unityReady = false;
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
@@ -92,9 +90,9 @@ public class Adunite extends CordovaPlugin {
     private boolean showAds(CallbackContext callbackContext, JSONArray data) {
         final String networkName = data.optString(0);
         if ("fban".equals(networkName)) {
-            showFBAds();
+            showFBAds(callbackContext);
         } else if ("unity".equals(networkName)) {
-            showUnityAds();
+            showUnityAds(callbackContext);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -111,7 +109,6 @@ public class Adunite extends CordovaPlugin {
     private void loadFBAds(final String pid) {
         Log.i(LOG_TAG, "Trying to load fban ads, pid=" + pid);
         if (_fbInterstitialAd != null) {
-            _fbReady = false;
             _fbInterstitialAd.destroy();
         }
         _fbInterstitialAd = new InterstitialAd(getActivity(), pid);
@@ -119,13 +116,14 @@ public class Adunite extends CordovaPlugin {
         _fbInterstitialAd.loadAd();
     }
 
-    private void showFBAds() {
+    private void showFBAds(CallbackContext callbackContext) {
         Log.i(LOG_TAG, "Trying to show fban ads");
-        if (_fbReady && _fbInterstitialAd != null) {
+        if (_fbInterstitialAd != null) {
             _fbInterstitialAd.show();
         } else {
-            // TODO: return error to js layer
             Log.e(LOG_TAG, "fban interstitial not ready, cannot show");
+            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "fban interstitial not ready, cannot show");
+            callbackContext.sendPluginResult(result);
         }
     }
 
@@ -133,14 +131,8 @@ public class Adunite extends CordovaPlugin {
 
     // NOTE: unity does not have load method
 
-    private void showUnityAds() {
-        if (_unityReady) {
-            _unityReady = false;
-            UnityAds.show(getActivity());
-        } else {
-            // TODO: return error to js layer
-            Log.e(LOG_TAG, "fban interstitial not ready, cannot show");
-        }
+    private void showUnityAds(CallbackContext callbackContext) {
+        UnityAds.show(getActivity());
     }
 
     // Admob
@@ -176,13 +168,11 @@ public class Adunite extends CordovaPlugin {
     private class UnityAdsListener implements IUnityAdsListener {
         @Override
         public void onUnityAdsReady(final String zoneId) {
-            _unityReady = true;
             sendAdsEventToJs("unity", "READY", zoneId);
         }
 
         @Override
         public void onUnityAdsStart(String zoneId) {
-            _unityReady = false;
             sendAdsEventToJs("unity", "START", zoneId);
         }
 
@@ -201,7 +191,6 @@ public class Adunite extends CordovaPlugin {
     private class FBInterstitialAdListener implements InterstitialAdListener {
         @Override
         public void onInterstitialDisplayed(Ad ad) {
-            _fbReady = false;
             sendAdsEventToJs("fban", "START", ad.getPlacementId());
         }
 
@@ -217,7 +206,6 @@ public class Adunite extends CordovaPlugin {
 
         @Override
         public void onAdLoaded(Ad ad) {
-            _fbReady = true;
             sendAdsEventToJs("fban", "READY", ad.getPlacementId());
         }
 

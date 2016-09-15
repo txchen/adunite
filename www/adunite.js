@@ -46,8 +46,8 @@ module.exports = {
   /////// states
   _inited: false,
   _adsOptions: {
-    showCooldown: 45, // global showCooldown in seconds
-    loadCooldown: 10, // global loadCooldown in seconds
+    showCooldown: 60, // global showCooldown in seconds
+    loadCooldown: 25, // global loadCooldown in seconds
     networks: {
       fban: { name: 'fban', pid: null, weight: 100 },
       unity: { name: 'unity', pid: null, weight: 100 },
@@ -95,9 +95,10 @@ module.exports = {
             // set the ready state
             self._adsStates[adsEvent.network_name].ready = true
           } else if (adsEvent.event_name === 'LOADERROR') {
-            // decide when to load again based on lastLoad
+            // load again when load failed
+            self._loadAds(adsEvent.network_name)
           } else if (adsEvent.event_name === 'FINISH') {
-            // TODO: set the state, and load next
+            // after ads is dismissed, load it again
             self._loadAds(adsEvent.network_name)
           }
         } else { // not adsEvent, means first callback when init is done.
@@ -112,36 +113,84 @@ module.exports = {
         cordova.fireWindowEvent("adunite_init_failure", { type: 'init_failure', error: err })
       }, 'Adunite', 'init', [ unityGameId ])
 
-    successCallback()
+    successCallback(this._adsOptions)
   },
 
   showAds: function (successCallback, errorCallback) {
     // get all the available ads, based on java layer and showCooldown
     // then based on weight, pick one of them.
-    // if fail to pick one, call errorCallback
-    for (var property in this._adsStates) {
-      // TODO: make it correct
-      if (this._adsStates[property].ready) {
-        this._adsStates[property].ready = false
-        this._adsStates[property].lastShown = new Date().getTime()
-        cordova.exec(successCallback, errorCallback,
-          'Adunite', 'showAds', [ property ])
-      }
+    var networkToShow = this.pickNextAdsToShow()
+    if (networkToShow) {
+      this._adsStates[networkToShow].ready = false
+      this._adsStates[networkToShow].lastShown = new Date().getTime()
+      cordova.exec(successCallback, errorCallback,
+        'Adunite', 'showAds', [ networkToShow ])
+    } else {
+      errorCallback('no ready ads to show')
     }
   },
 
-  getAdsStates: function (successCallback) {
-    successCallback(this._adsStates)
+  getAdsStates: function () {
+    return this._adsStates
+  },
+
+  // return an array with network_name in it
+  getAvailableAds: function () {
+    var result = []
+    var now = new Date().getTime()
+    for (var network in this._adsStates) {
+      if (this._adsStates[network].ready) {
+        var desiredShowTime = this._adsStates[network].lastShown
+        desiredShowTime += this._adsOptions.networks[network].showCooldown * 1000
+        if (desiredShowTime <= now) {
+          result.push(network)
+        }
+      }
+    }
+    return result
+  },
+
+  pickNextAdsToShow: function () {
+    var readyOnes = this.getAvailableAds()
+    if (readyOnes.length === 0) {
+      return null
+    }
+    log('[info] try to pick next ads to show from ' + readyOnes.length + ' choices')
+    // based on weight, do some random calc
+    var totalWeight = 0
+    var winner = readyOnes[0]
+    for (var i in readyOnes) {
+      totalWeight += this._adsOptions.networks[readyOnes[i]].weight
+    }
+    var rand = Math.floor(Math.random() * totalWeight)
+    for (var i in readyOnes) {
+      var curItemWeight = this._adsOptions.networks[readyOnes[i]].weight
+      if (rand < curItemWeight) {
+        winner = readyOnes[i]
+        break
+      }
+      rand -= curItemWeight
+    }
+    return winner
   },
 
   _loadAds: function (networkName) {
     if (networkName === 'unity') {
       return // no-op, unity ads loading is not controlled by us
     }
-    if (this._adsOptions.networks[networkName]) {
-      this._adsStates[networkName].lastLoad = new Date().getTime()
-      cordova.exec(function () { }, function () { },
-        'Adunite', 'loadAds', [ networkName, this._adsOptions.networks[networkName].pid ])
+    var self = this
+    if (self._adsOptions.networks[networkName]) {
+      // based on lastLoad ts, calculate the delay of loading
+      var now = new Date().getTime()
+      var desiredLoadTime = self._adsStates[networkName].lastLoad +
+        self._adsOptions.networks[networkName].loadCooldown * 1000
+      var delay = now > desiredLoadTime ? 0 : desiredLoadTime - now
+      log('[info] will load ' + networkName + ' after ' + delay + ' ms')
+      setTimeout(function () {
+          self._adsStates[networkName].lastLoad = new Date().getTime()
+          cordova.exec(function () { }, function () { },
+            'Adunite', 'loadAds', [ networkName, self._adsOptions.networks[networkName].pid ])
+        }, delay)
     } else {
       log('[error] ' + networkName + ' is not enabled in this session, cannot load')
     }

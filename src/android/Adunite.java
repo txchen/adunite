@@ -23,6 +23,13 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.text.format.Formatter;
 
+import com.facebook.ads.Ad;
+import com.facebook.ads.AdError;
+import com.facebook.ads.InterstitialAd;
+import com.facebook.ads.InterstitialAdListener;
+
+import com.google.android.gms.ads.AdRequest;
+
 import com.unity3d.ads.IUnityAdsListener;
 import com.unity3d.ads.UnityAds;
 
@@ -30,7 +37,11 @@ public class Adunite extends CordovaPlugin {
     private static final String LOG_TAG = "Adunite";
     private CallbackContext _aduniteCallbackContext;
 
+    private InterstitialAd _fbInterstitialAd;
+    private volatile boolean _fbReady = false;
+
     private UnityAdsListener _unityAdsListener;
+    private volatile boolean _unityReady = false;
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
@@ -61,10 +72,26 @@ public class Adunite extends CordovaPlugin {
     }
 
     private boolean loadAds(CallbackContext callbackContext, JSONArray data) {
+        final String networkName = data.optString(0);
+        final String pid = data.optString(1);
+
+        if ("fban".equals(networkName)) {
+            loadFBAds(pid);
+        } else {
+            Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
+        }
         return true;
     }
 
     private boolean showAds(CallbackContext callbackContext, JSONArray data) {
+        final String networkName = data.optString(0);
+        if ("fban".equals(networkName)) {
+            showFBAds();
+        } else if ("unity".equals(networkName)) {
+            showUnityAds();
+        } else {
+            Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
+        }
         return true;
     }
 
@@ -72,11 +99,55 @@ public class Adunite extends CordovaPlugin {
         return true;
     }
 
+    // =========== END of public facing methods ================
+
+    // FBAN
+    private void loadFBAds(final String pid) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (_fbInterstitialAd != null) {
+                    _fbReady = false;
+                    _fbInterstitialAd.destroy();
+                }
+                _fbInterstitialAd = new InterstitialAd(getActivity(), pid);
+                _fbInterstitialAd.setAdListener(new FBInterstitialAdListener());
+                _fbInterstitialAd.loadAd();
+            }
+        });
+    }
+
+    private void showFBAds() {
+        if (_fbReady) {
+            _fbInterstitialAd.show();
+        } else {
+            // TODO: return error to js layer
+            Log.e(LOG_TAG, "fban interstitial not ready, cannot show");
+        }
+    }
+
+    // Unity
+
+    // NOTE: unity does not have load method
+
+    private void showUnityAds() {
+        if (_unityReady) {
+            _unityReady = false;
+            UnityAds.show(getActivity());
+        } else {
+            // TODO: return error to js layer
+            Log.e(LOG_TAG, "fban interstitial not ready, cannot show");
+        }
+    }
+
+    // Admob
+
     private Activity getActivity() {
         return cordova.getActivity();
     }
 
-    public void sendAdsEventToJs(String networkName, String eventName, String eventDetail) {
+    private void sendAdsEventToJs(String networkName, String eventName, String eventDetail) {
+        Log.w(LOG_TAG, String.format("%s - %s - %s", networkName, eventName, eventDetail));
         PluginResult result = new PluginResult(PluginResult.Status.OK, buildAdsEvent(networkName, eventName, eventDetail));
         result.setKeepCallback(true);
         if (_aduniteCallbackContext != null) {
@@ -86,7 +157,7 @@ public class Adunite extends CordovaPlugin {
         }
     }
 
-    public JSONObject buildAdsEvent(String networkName, String eventName, String eventDetail) {
+    private JSONObject buildAdsEvent(String networkName, String eventName, String eventDetail) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("network_name", networkName);
@@ -102,26 +173,54 @@ public class Adunite extends CordovaPlugin {
     private class UnityAdsListener implements IUnityAdsListener {
         @Override
         public void onUnityAdsReady(final String zoneId) {
-            Log.w(LOG_TAG, "unity ads ready: " + zoneId);
+            _unityReady = true;
             sendAdsEventToJs("unity", "READY", zoneId);
         }
 
         @Override
         public void onUnityAdsStart(String zoneId) {
-            Log.w(LOG_TAG, "unity ads started: " + zoneId);
+            _unityReady = false;
             sendAdsEventToJs("unity", "START", zoneId);
         }
 
         @Override
         public void onUnityAdsFinish(String zoneId, UnityAds.FinishState result) {
-            Log.w(LOG_TAG, "unity ads finished " + zoneId + " " + result.toString());
-            sendAdsEventToJs("unity", "FINISH", result.toString());
+            sendAdsEventToJs("unity", "FINISH", zoneId + " " + result.toString());
         }
 
         @Override
         public void onUnityAdsError(UnityAds.UnityAdsError error, String message) {
-            Log.e(LOG_TAG, "onUnityAdsError: " + error + " - " + message);
             sendAdsEventToJs("unity", "ERROR", error.toString() + "-" + message);
+        }
+        // Unity Ads has no Clicked event
+    }
+
+    private class FBInterstitialAdListener implements InterstitialAdListener {
+        @Override
+        public void onInterstitialDisplayed(Ad ad) {
+            _fbReady = false;
+            sendAdsEventToJs("fban", "START", ad.getPlacementId());
+        }
+
+        @Override
+        public void onInterstitialDismissed(Ad ad) {
+            sendAdsEventToJs("fban", "FINISH", ad.getPlacementId());
+        }
+
+        @Override
+        public void onError(Ad ad, AdError error) {
+            sendAdsEventToJs("fban", "ERROR", String.valueOf(error.getErrorCode()));
+        }
+
+        @Override
+        public void onAdLoaded(Ad ad) {
+            _fbReady = true;
+            sendAdsEventToJs("fban", "READY", ad.getPlacementId());
+        }
+
+        @Override
+        public void onAdClicked(Ad ad) {
+            sendAdsEventToJs("fban", "CLICK", ad.getPlacementId());
         }
     }
 }

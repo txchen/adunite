@@ -24,10 +24,11 @@ adunite.configAds({
     showCooldown: 60, // global showCooldown in seconds
     loadCooldown: 25, // global loadCooldown in seconds
     initLastShow: new Date().getTime(),
+    maxLoadRetry: 10,
     networks: {
       fban: { name: 'fban', pid: 'YOUR_FBAN_PID', weight: 100 },
       unity: { name: 'unity', pid: 'YOUR_UNITY_ADS_GAME_ID', weight: 50, showCooldown: 50 },
-      admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100 },
+      admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
     }
   }, function (actualAdsOption) {
     // successCallback
@@ -44,9 +45,10 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
   showCooldown: 60, // global showCooldown in seconds
   loadCooldown: 25, // global loadCooldown in seconds
   initLastShow: 0,
+  maxLoadRetry: -1, // -1 means no limit
   networks: {
     fban: { name: 'fban', pid: null, weight: 100 },
-    unity: { name: 'unity', pid: null, weight: 100 },
+    unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
     admob: { name: 'admob', pid: null, weight: 100 },
   },
 }
@@ -55,6 +57,8 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
 There are two cooldown settings here, `showCooldown` resets when ads appear, and `loadCooldown` resets when ads load. The global ones will be used, if network level setting is not specified.
 
 You can set `initLastShow` to `new Date().getTime()` or `new Date().getTime() - 30000` for example, to prevent ads coming out too soon in your game. If you don't set, each network will have it as 0, so that right after the 1st load, they can show, it might be too fast and might affect your app experience.
+
+`maxLoadRetry` can be used to limit the retry attemps count. For example, one of your placement is not approved yet, you will always get error when you load. Set this value can limit the retry count, otherwise, it will retry forever. Like the cooldown settings, global setting is used if network level value is not specified.
 
 ### Show ads
 

@@ -49,16 +49,17 @@ module.exports = {
     showCooldown: 60, // global showCooldown in seconds
     loadCooldown: 25, // global loadCooldown in seconds
     initLastShow: 0,
+    maxLoadRetry: -1, // -1 means no limit
     networks: {
       fban: { name: 'fban', pid: null, weight: 100 },
-      unity: { name: 'unity', pid: null, weight: 100 },
+      unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
       admob: { name: 'admob', pid: null, weight: 100 },
     },
   },
   _adsStates: {
-    fban: { ready: false, lastShow: 0, lastLoad: 0 },
-    unity: { ready: false, lastShow: 0, lastLoad: 0 },
-    admob: { ready: false, lastShow: 0, lastLoad: 0 },
+    fban: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
+    unity: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
+    admob: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
   },
 
   configAds: function (options, successCallback, errorCallback) {
@@ -71,6 +72,9 @@ module.exports = {
       }
       if (!this._adsOptions.networks[property].loadCooldown) {
         this._adsOptions.networks[property].loadCooldown = this._adsOptions.loadCooldown
+      }
+      if (!this._adsOptions.networks[property].maxLoadRetry) {
+        this._adsOptions.networks[property].maxLoadRetry = this._adsOptions.maxLoadRetry
       }
       if (this._adsOptions.networks[property].pid === null) {
         delete this._adsOptions.networks[property]
@@ -103,7 +107,13 @@ module.exports = {
             self._adsStates[adsEvent.network_name].ready = true
           } else if (adsEvent.event_name === 'LOADERROR') {
             // load again when load failed
-            self._loadAds(adsEvent.network_name)
+            self._adsStates[adsEvent.network_name].loadFailCount++
+            if (self._adsOptions.networks[adsEvent.network_name].maxLoadRetry > 0 &&
+                self._adsOptions.networks[adsEvent.network_name].maxLoadRetry < self._adsStates[adsEvent.network_name].loadFailCount) {
+              log('[warn] max loaderror count reached, will no longer load for: ' + adsEvent.network_name)
+            } else {
+              self._loadAds(adsEvent.network_name)
+            }
           } else if (adsEvent.event_name === 'FINISH') {
             // after ads is dismissed, load it again
             self._loadAds(adsEvent.network_name)

@@ -39,10 +39,10 @@ adunite.configAds({
 
 The first argument of `configAds` is your adsOptions. Adunite has a default one internally, and your input will merge with that one:
 
-```json
+```js
 {
-  showCooldown: 60,
-  loadCooldown: 25,
+  showCooldown: 60, // global showCooldown in seconds
+  loadCooldown: 25, // global loadCooldown in seconds
   initLastShow: 0,
   networks: {
     fban: { name: 'fban', pid: null, weight: 100 },

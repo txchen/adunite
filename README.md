@@ -41,8 +41,8 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
 
 ```json
 {
-  showCooldown: 60, // global showCooldown in seconds
-  loadCooldown: 25, // global loadCooldown in seconds
+  showCooldown: 60,
+  loadCooldown: 25,
   initLastShow: 0,
   networks: {
     fban: { name: 'fban', pid: null, weight: 100 },

@@ -51,11 +51,13 @@ module.exports = {
     networks: {
       fban: { name: 'fban', pid: null, weight: 100 },
       unity: { name: 'unity', pid: null, weight: 100 },
+      admob: { name: 'admob', pid: null, weight: 100 },
     },
   },
   _adsStates: {
     fban: { ready: false, lastShown: 0, lastLoad: 0 },
-    unity: { ready: false, lastShown: 0, lastLoad: 0 }
+    unity: { ready: false, lastShown: 0, lastLoad: 0 },
+    admob: { ready: false, lastShown: 0, lastLoad: 0 },
   },
 
   configAds: function (options, successCallback, errorCallback) {

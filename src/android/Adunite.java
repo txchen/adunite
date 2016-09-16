@@ -28,6 +28,7 @@ import com.facebook.ads.AdError;
 import com.facebook.ads.InterstitialAd;
 import com.facebook.ads.InterstitialAdListener;
 
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 
 import com.unity3d.ads.IUnityAdsListener;
@@ -38,15 +39,13 @@ public class Adunite extends CordovaPlugin {
     private CallbackContext _aduniteCallbackContext;
 
     private InterstitialAd _fbInterstitialAd;
-
     private UnityAdsListener _unityAdsListener;
+    private com.google.android.gms.ads.InterstitialAd _admobInterstitialAd;
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         if (action.equals("showAds")) {
             return showAds(callbackContext, data);
-        } else if (action.equals("getReadyAds")) {
-            return getReadyAds(callbackContext);
         } else if (action.equals("init")) {
             // all ads event callback goes to this callback
             _aduniteCallbackContext = callbackContext;
@@ -81,6 +80,8 @@ public class Adunite extends CordovaPlugin {
             loadFBAds(pid);
         } else if ("unity".equals(networkName)) {
             // no op
+        } else if ("admob".equals(networkName)) {
+            loadAdmobAds(pid);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -93,13 +94,13 @@ public class Adunite extends CordovaPlugin {
             showFBAds(callbackContext);
         } else if ("unity".equals(networkName)) {
             showUnityAds(callbackContext);
+        } else if ("admob".equals(networkName)) {
+            showAdmobAds(callbackContext);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
-        return true;
-    }
-
-    private boolean getReadyAds(CallbackContext callbackContext) {
+        PluginResult result = new PluginResult(PluginResult.Status.OK, networkName);
+        callbackContext.sendPluginResult(result);
         return true;
     }
 
@@ -128,7 +129,6 @@ public class Adunite extends CordovaPlugin {
     }
 
     // Unity
-
     // NOTE: unity does not have load method
 
     private void showUnityAds(CallbackContext callbackContext) {
@@ -136,6 +136,35 @@ public class Adunite extends CordovaPlugin {
     }
 
     // Admob
+    private void loadAdmobAds(final String pid) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(LOG_TAG, "Trying to load admob ads, pid=" + pid);
+                _admobInterstitialAd = new com.google.android.gms.ads.InterstitialAd(getActivity());
+                _admobInterstitialAd.setAdUnitId(pid);
+                AdRequest adRequest = new AdRequest.Builder().build();
+                _admobInterstitialAd.setAdListener(new AdmobAdListener());
+                _admobInterstitialAd.loadAd(adRequest);
+            }
+        });
+    }
+
+    private void showAdmobAds(final CallbackContext callbackContext) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(LOG_TAG, "Trying to show admob ads");
+                if (_admobInterstitialAd != null) {
+                    _admobInterstitialAd.show();
+                } else {
+                    Log.e(LOG_TAG, "abmob interstitial not ready, cannot show");
+                    PluginResult result = new PluginResult(PluginResult.Status.ERROR, "admob interstitial not ready, cannot show");
+                    callbackContext.sendPluginResult(result);
+                }
+            }
+        });
+    }
 
     private Activity getActivity() {
         return cordova.getActivity();
@@ -212,6 +241,33 @@ public class Adunite extends CordovaPlugin {
         @Override
         public void onAdClicked(Ad ad) {
             sendAdsEventToJs("fban", "CLICK", ad.getPlacementId());
+        }
+    }
+
+    private class AdmobAdListener extends AdListener {
+        @Override
+        public void onAdClosed() {
+            sendAdsEventToJs("admob", "FINISH", "");
+        }
+
+        @Override
+        public void onAdFailedToLoad(int errorCode) {
+            sendAdsEventToJs("admob", "LOADERROR", String.valueOf(errorCode));
+        }
+
+        @Override
+        public void onAdLeftApplication() {
+            sendAdsEventToJs("admob", "CLICK", "");
+        }
+
+        @Override
+        public void onAdOpened() {
+            sendAdsEventToJs("admob", "START", "");
+        }
+
+        @Override
+        public void onAdLoaded() {
+            sendAdsEventToJs("admob", "READY", "");
         }
     }
 }

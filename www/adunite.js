@@ -48,6 +48,7 @@ module.exports = {
   _adsOptions: {
     showCooldown: 60, // global showCooldown in seconds
     loadCooldown: 25, // global loadCooldown in seconds
+    initLastShow: 0,
     networks: {
       fban: { name: 'fban', pid: null, weight: 100 },
       unity: { name: 'unity', pid: null, weight: 100 },
@@ -55,9 +56,9 @@ module.exports = {
     },
   },
   _adsStates: {
-    fban: { ready: false, lastShown: 0, lastLoad: 0 },
-    unity: { ready: false, lastShown: 0, lastLoad: 0 },
-    admob: { ready: false, lastShown: 0, lastLoad: 0 },
+    fban: { ready: false, lastShow: 0, lastLoad: 0 },
+    unity: { ready: false, lastShow: 0, lastLoad: 0 },
+    admob: { ready: false, lastShow: 0, lastLoad: 0 },
   },
 
   configAds: function (options, successCallback, errorCallback) {
@@ -76,6 +77,10 @@ module.exports = {
         delete this._adsStates[property]
       }
       availableNetworks++
+    }
+
+    for (var network in this._adsStates) {
+      this._adsStates[network].lastShow = this._adsOptions.initLastShow
     }
     log('Actual adsOption = ' + JSON.stringify(this._adsOptions, null, 2))
     log(availableNetworks + ' network(s) available in this session')
@@ -125,7 +130,7 @@ module.exports = {
     var networkToShow = this.pickNextAdsToShow()
     if (networkToShow) {
       this._adsStates[networkToShow].ready = false
-      this._adsStates[networkToShow].lastShown = new Date().getTime()
+      this._adsStates[networkToShow].lastShow = new Date().getTime()
       setTimeout(function () {
           cordova.exec(successCallback, errorCallback,
             'Adunite', 'showAds', [ networkToShow ])
@@ -145,7 +150,7 @@ module.exports = {
     var now = new Date().getTime()
     for (var network in this._adsStates) {
       if (this._adsStates[network].ready) {
-        var desiredShowTime = this._adsStates[network].lastShown
+        var desiredShowTime = this._adsStates[network].lastShow
         desiredShowTime += this._adsOptions.networks[network].showCooldown * 1000
         if (desiredShowTime <= now) {
           result.push(network)

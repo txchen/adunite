@@ -21,8 +21,9 @@ The first thing you should do in your app, is to call `configAds` method.
 
 ```js
 adunite.configAds({
-    showCooldown: 60, // global showCooldown in seconds
-    loadCooldown: 25, // global loadCooldown in seconds
+    showCooldown: 60, // default showCooldown in seconds for each network
+    loadCooldown: 25, // default loadCooldown in seconds for each network
+    globalShowCooldown: 45, // after user see an ad, he can see the next only after 45 seconds
     initLastShow: new Date().getTime(),
     maxLoadRetry: 10,
     networks: {
@@ -42,8 +43,9 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
 
 ```js
 {
-  showCooldown: 60, // global showCooldown in seconds
-  loadCooldown: 25, // global loadCooldown in seconds
+  showCooldown: 60, // default showCooldown in seconds for each network
+  loadCooldown: 25, // default loadCooldown in seconds for each network
+  globalShowCooldown: 0, // 0 means disabled. Otherwise it is a global show cooldown in seconds
   initLastShow: 0,
   maxLoadRetry: -1, // -1 means no limit
   networks: {
@@ -54,11 +56,13 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
 }
 ```
 
-There are two cooldown settings here, `showCooldown` resets when ads appear, and `loadCooldown` resets when ads load. The global ones will be used, if network level setting is not specified.
+There are two cooldown settings here, `showCooldown` resets when ads appear, and `loadCooldown` resets when ads load. This is a per network setting, you can set them in each network, or the top level default one will be applied to each network.
 
 You can set `initLastShow` to `new Date().getTime()` or `new Date().getTime() - 30000` for example, to prevent ads coming out too soon in your game. If you don't set, each network will have it as 0, so that right after the 1st load, they can show, it might be too fast and might affect your app experience.
 
 `maxLoadRetry` can be used to limit the retry attemps count. For example, one of your placement is not approved yet, you will always get error when you load. Set this value can limit the retry count, otherwise, it will retry forever. Like the cooldown settings, global setting is used if network level value is not specified.
+
+Also, other than the network level `showCooldown`, you can also define a global show cooldown value `globalShowCooldown`. This can be helpful if you don't want your user to see the ads too frequently. By defautl this is disabled if you don't set it.
 
 ### Show ads
 

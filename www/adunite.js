@@ -46,8 +46,9 @@ module.exports = {
   /////// states
   _inited: false,
   _adsOptions: {
-    showCooldown: 60, // global showCooldown in seconds
-    loadCooldown: 25, // global loadCooldown in seconds
+    showCooldown: 60, // default showCooldown in seconds for each network
+    loadCooldown: 25, // default loadCooldown in seconds for each network
+    globalShowCooldown: 0, // 0 means disabled. Otherwise it is a global show cooldown in seconds
     initLastShow: 0,
     maxLoadRetry: -1, // -1 means no limit
     networks: {
@@ -56,6 +57,7 @@ module.exports = {
       admob: { name: 'admob', pid: null, weight: 100 },
     },
   },
+  _lastShow: 0,
   _adsStates: {
     fban: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     unity: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
@@ -141,6 +143,7 @@ module.exports = {
     if (networkToShow) {
       this._adsStates[networkToShow].ready = false
       this._adsStates[networkToShow].lastShow = new Date().getTime()
+      this._lastShow = new Date().getTime()
       setTimeout(function () {
           cordova.exec(successCallback, errorCallback,
             'Adunite', 'showAds', [ networkToShow ])
@@ -171,6 +174,12 @@ module.exports = {
   },
 
   pickNextAdsToShow: function () {
+    // check the globalShowCooldown settings first
+    if (this._adsOptions.globalShowCooldown > 0 &&
+        this._lastShow + this._adsOptions.globalShowCooldown * 1000 > new Date().getTime()) {
+      log('[info] globalShowCooldown is set, and it is still in it, return null')
+      return null
+    }
     var readyOnes = this.getAvailableAds()
     if (readyOnes.length === 0) {
       return null

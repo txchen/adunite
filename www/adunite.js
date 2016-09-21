@@ -78,7 +78,8 @@ module.exports = {
       if (!this._adsOptions.networks[property].maxLoadRetry) {
         this._adsOptions.networks[property].maxLoadRetry = this._adsOptions.maxLoadRetry
       }
-      if (this._adsOptions.networks[property].pid === null) {
+      if (this._adsOptions.networks[property].pid === null ||
+          !this._adsStates.hasOwnProperty(property)) {
         delete this._adsOptions.networks[property]
         delete this._adsStates[property]
       }

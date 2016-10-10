@@ -34,6 +34,14 @@ import com.google.android.gms.ads.AdRequest;
 import com.unity3d.ads.IUnityAdsListener;
 import com.unity3d.ads.UnityAds;
 
+import com.applovin.adview.AppLovinInterstitialAd;
+import com.applovin.adview.AppLovinInterstitialAdDialog;
+import com.applovin.sdk.AppLovinAd;
+import com.applovin.sdk.AppLovinAdClickListener;
+import com.applovin.sdk.AppLovinAdDisplayListener;
+import com.applovin.sdk.AppLovinAdLoadListener;
+import com.applovin.sdk.AppLovinSdk;
+
 public class Adunite extends CordovaPlugin {
     private static final String LOG_TAG = "Adunite";
     private CallbackContext _aduniteCallbackContext;
@@ -41,6 +49,8 @@ public class Adunite extends CordovaPlugin {
     private InterstitialAd _fbInterstitialAd;
     private UnityAdsListener _unityAdsListener;
     private com.google.android.gms.ads.InterstitialAd _admobInterstitialAd;
+    private AppLovinInterstitialAdDialog _adDialog;
+    private volatile boolean _applovinReady = false;
 
     @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
@@ -49,7 +59,7 @@ public class Adunite extends CordovaPlugin {
         } else if (action.equals("init")) {
             // all ads event callback goes to this callback
             _aduniteCallbackContext = callbackContext;
-            initAdunite(callbackContext, data.optString(0));
+            initAdunite(callbackContext, data.optString(0), data.optBoolean(1));
             //, data.optString(0), data.optBoolean(1), data.optBoolean(2), data.optBoolean(3));
             PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject());
             result.setKeepCallback(true);
@@ -62,13 +72,41 @@ public class Adunite extends CordovaPlugin {
         }
     }
 
-    private void initAdunite(CallbackContext callbackContext, final String unityGameId) {
+    private void initAdunite(CallbackContext callbackContext, final String unityGameId, final boolean enableApplovin) {
         // some sdk requires init before using
+        // unity
         if ((unityGameId != null) && (!"".equals(unityGameId)) && (!"null".equals(unityGameId))) {
             Log.w(LOG_TAG, "unity ads is enabled, init it with GameId: " + unityGameId);
             _unityAdsListener = new UnityAdsListener();
             UnityAds.setListener(_unityAdsListener);
             UnityAds.initialize(getActivity(), unityGameId, _unityAdsListener);
+        }
+        // applovin
+        if (enableApplovin) {
+            Log.w(LOG_TAG, "applovin ads is enabled.");
+            _adDialog = AppLovinInterstitialAd.create(AppLovinSdk.getInstance(getActivity()), getActivity());
+            MyAppLovinListener myAppLovinListener = new MyAppLovinListener();
+            _adDialog.setAdDisplayListener(myAppLovinListener);
+            _adDialog.setAdLoadListener(myAppLovinListener);
+            _adDialog.setAdClickListener(myAppLovinListener);
+            AppLovinSdk.initializeSdk(getActivity());
+            // start a polling thread to check if ads is ready to show
+            Thread checkAppLovinThread = new Thread(new Runnable() { public void run() {
+                while (true) {
+                    if (_applovinReady == false) {
+                        boolean result = _adDialog.isAdReadyToDisplay();
+                        Log.d(LOG_TAG, "checking applovin ready state = " + result);
+                        if (result) {
+                            sendAdsEventToJs("applovin", "READY", "");
+                            _applovinReady = true;
+                        }
+                    }
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) { e.printStackTrace(); }
+                }
+            }});
+            checkAppLovinThread.start();
         }
     }
 
@@ -82,6 +120,8 @@ public class Adunite extends CordovaPlugin {
             // no op
         } else if ("admob".equals(networkName)) {
             loadAdmobAds(pid);
+        } else if ("applovin".equals(networkName)) {
+            // no op
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -96,6 +136,8 @@ public class Adunite extends CordovaPlugin {
             showUnityAds(callbackContext);
         } else if ("admob".equals(networkName)) {
             showAdmobAds(callbackContext);
+        } else if ("applovin".equals(networkName)) {
+            showApplovinAds(callbackContext);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -130,7 +172,6 @@ public class Adunite extends CordovaPlugin {
 
     // Unity
     // NOTE: unity does not have load method
-
     private void showUnityAds(CallbackContext callbackContext) {
         UnityAds.show(getActivity());
     }
@@ -164,6 +205,20 @@ public class Adunite extends CordovaPlugin {
                 }
             }
         });
+    }
+
+    // applovin
+    private void showApplovinAds(final CallbackContext callbackContext) {
+        if (_adDialog.isAdReadyToDisplay()) {
+            Log.i(LOG_TAG, "Trying to show applovin ads");
+            // NOTE: only after we call show, it would trigger loaded event
+            //       this is stupid, makes the logic hard to implement
+            _adDialog.show();
+        } else {
+            Log.e(LOG_TAG, "applovin ads not ready, cannot show");
+            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "applovin ads not ready, cannot show");
+            callbackContext.sendPluginResult(result);
+        }
     }
 
     private Activity getActivity() {
@@ -268,6 +323,32 @@ public class Adunite extends CordovaPlugin {
         @Override
         public void onAdLoaded() {
             sendAdsEventToJs("admob", "READY", "");
+        }
+    }
+
+    private class MyAppLovinListener implements AppLovinAdDisplayListener, AppLovinAdLoadListener, AppLovinAdClickListener {
+        @Override
+        public void adDisplayed(AppLovinAd appLovinAd) {
+            sendAdsEventToJs("applovin", "START", "");
+            _applovinReady = false;
+        }
+        @Override
+        public void adHidden(AppLovinAd appLovinAd) {
+            sendAdsEventToJs("applovin", "FINISH", "");
+        }
+        @Override
+        public void adReceived(AppLovinAd appLovinAd) {
+            // This will actually happen after ads is shown, so not useful
+            Log.i(LOG_TAG, "applovin got adReceived event");
+            // sendAdsEventToJs("applovin", "READY", String.valueOf(appLovinAd.getAdIdNumber()));
+        }
+        @Override
+        public void failedToReceiveAd(int errorCode) {
+            sendAdsEventToJs("applovin", "LOADERROR", String.valueOf(errorCode));
+        }
+        @Override
+        public void adClicked(AppLovinAd appLovinAd) {
+            sendAdsEventToJs("applovin", "CLICK", "");
         }
     }
 }

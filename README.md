@@ -6,6 +6,7 @@ Now adunite supports the following networks:
 * Facebook Audience Network
 * Admob
 * Unity Ads
+* Applovin
 
 ## Usage
 
@@ -13,6 +14,14 @@ First, add the plugin to your cordova project:
 
 ```
 cordova plugin add cordova-plugin-adunite --save
+```
+
+Note: applovin sdk read the key from meta data, instead of code. You must define your sdk key in the plugin config, like this in `config.xml`:
+
+```
+<plugin name="cordova-plugin-adunite" spec="~1.0.8">
+    <variable name="APPLOVIN_KEY" value="YOUR_SECRET_KEY_FROM_DASHBOARD" />
+</plugin>
 ```
 
 ### Config your placements
@@ -30,6 +39,7 @@ adunite.configAds({
       fban: { name: 'fban', pid: 'YOUR_FBAN_PID', weight: 100 },
       unity: { name: 'unity', pid: 'YOUR_UNITY_ADS_GAME_ID', weight: 50, showCooldown: 50 },
       admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
+      applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 100, maxLoadRetry: 15 },
     }
   }, function (actualAdsOption) {
     // successCallback
@@ -52,9 +62,12 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
     fban: { name: 'fban', pid: null, weight: 100 },
     unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
     admob: { name: 'admob', pid: null, weight: 100 },
+    applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
   },
 }
 ```
+
+For `applovin`, since the key is already defined in config.xml, you just need to put any non-empty string to enable it.
 
 There are two cooldown settings here, `showCooldown` resets when ads appear, and `loadCooldown` resets when ads load. This is a per network setting, you can set them in each network, or the top level default one will be applied to each network.
 

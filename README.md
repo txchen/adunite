@@ -7,6 +7,7 @@ Now adunite supports the following networks:
 * Admob
 * Unity Ads
 * Applovin
+* Adcolony
 
 ## Usage
 

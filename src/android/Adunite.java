@@ -42,6 +42,12 @@ import com.applovin.sdk.AppLovinAdDisplayListener;
 import com.applovin.sdk.AppLovinAdLoadListener;
 import com.applovin.sdk.AppLovinSdk;
 
+import com.jirbo.adcolony.AdColony;
+import com.jirbo.adcolony.AdColonyAd;
+import com.jirbo.adcolony.AdColonyAdAvailabilityListener;
+import com.jirbo.adcolony.AdColonyAdListener;
+import com.jirbo.adcolony.AdColonyVideoAd;
+
 public class Adunite extends CordovaPlugin {
     private static final String LOG_TAG = "Adunite";
     private CallbackContext _aduniteCallbackContext;
@@ -59,7 +65,7 @@ public class Adunite extends CordovaPlugin {
         } else if (action.equals("init")) {
             // all ads event callback goes to this callback
             _aduniteCallbackContext = callbackContext;
-            initAdunite(callbackContext, data.optString(0), data.optBoolean(1));
+            initAdunite(callbackContext, data.optString(0), data.optBoolean(1), data.optString(2));
             //, data.optString(0), data.optBoolean(1), data.optBoolean(2), data.optBoolean(3));
             PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject());
             result.setKeepCallback(true);
@@ -72,7 +78,8 @@ public class Adunite extends CordovaPlugin {
         }
     }
 
-    private void initAdunite(CallbackContext callbackContext, final String unityGameId, final boolean enableApplovin) {
+    private void initAdunite(CallbackContext callbackContext,
+            final String unityGameId, final boolean enableApplovin, final String adcolonyAppAndZoneId) {
         // some sdk requires init before using
         // unity
         if ((unityGameId != null) && (!"".equals(unityGameId)) && (!"null".equals(unityGameId))) {
@@ -108,6 +115,12 @@ public class Adunite extends CordovaPlugin {
             }});
             checkAppLovinThread.start();
         }
+        // adcolony
+        if ((adcolonyAppAndZoneId != null) && (!"".equals(adcolonyAppAndZoneId)) && (!"null".equals(adcolonyAppAndZoneId))) {
+            String[] tokens = adcolonyAppAndZoneId.split("_");
+            AdColony.configure(getActivity(), "version:1.0,store:google", tokens[0] /* appid */, tokens[1] /* zoneid */);
+            AdColony.addAdAvailabilityListener(new AdColonyListener());
+        }
     }
 
     private boolean loadAds(CallbackContext callbackContext, JSONArray data) {
@@ -121,6 +134,8 @@ public class Adunite extends CordovaPlugin {
         } else if ("admob".equals(networkName)) {
             loadAdmobAds(pid);
         } else if ("applovin".equals(networkName)) {
+            // no op
+        } else if ("adcolony".equals(networkName)) {
             // no op
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
@@ -138,6 +153,8 @@ public class Adunite extends CordovaPlugin {
             showAdmobAds(callbackContext);
         } else if ("applovin".equals(networkName)) {
             showApplovinAds(callbackContext);
+        } else if ("adcolony".equals(networkName)) {
+            showAdcolonyAds(callbackContext);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -219,6 +236,13 @@ public class Adunite extends CordovaPlugin {
             PluginResult result = new PluginResult(PluginResult.Status.ERROR, "applovin ads not ready, cannot show");
             callbackContext.sendPluginResult(result);
         }
+    }
+
+    // adcolony
+    private void showAdcolonyAds(final CallbackContext callbackContext) {
+        Log.i(LOG_TAG, "Trying to show adcolony ads");
+        AdColonyVideoAd ad = new AdColonyVideoAd().withListener(new AdColonyListener());
+        ad.show();
     }
 
     private Activity getActivity() {
@@ -349,6 +373,34 @@ public class Adunite extends CordovaPlugin {
         @Override
         public void adClicked(AppLovinAd appLovinAd) {
             sendAdsEventToJs("applovin", "CLICK", "");
+        }
+    }
+
+    private class AdColonyListener implements AdColonyAdAvailabilityListener, AdColonyAdListener {
+        @Override
+        public void onAdColonyAdAvailabilityChange(boolean b, String s) {
+            if (b) {
+                sendAdsEventToJs("adcolony", "READY", "");
+            }
+        }
+        @Override
+        public void onAdColonyAdAttemptFinished( AdColonyAd ad )
+        {
+            // Can use the ad object to determine information about the ad attempt:
+            // ad.shown();
+            // ad.notShown();
+            // ad.canceled();
+            // ad.noFill();
+            // ad.skipped();
+            if (ad.shown()) {
+                sendAdsEventToJs("adcolony", "FINISH", "");
+            }
+        }
+
+        @Override
+        public void onAdColonyAdStarted(AdColonyAd ad)
+        {
+            sendAdsEventToJs("adcolony", "START", "");
         }
     }
 }

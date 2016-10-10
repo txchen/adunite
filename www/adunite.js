@@ -55,7 +55,8 @@ module.exports = {
       fban: { name: 'fban', pid: null, weight: 100 },
       unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
       admob: { name: 'admob', pid: null, weight: 100 },
-      unity: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
+      applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
+      adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
     },
   },
   _lastShow: 0,
@@ -64,6 +65,7 @@ module.exports = {
     unity: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     admob: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     applovin: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
+    adcolony: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
   },
 
   configAds: function (options, successCallback, errorCallback) {
@@ -103,6 +105,10 @@ module.exports = {
     if (this._adsOptions.networks.applovin) {
       enableApplovin = true
     }
+    var adcolonyAppAndZoneId = null
+    if (this._adsOptions.networks.adcolony) {
+      adcolonyAppAndZoneId = this._adsOptions.networks.adcolony.pid
+    }
 
     var self = this
     cordova.exec(function (adsEvent) {
@@ -137,7 +143,7 @@ module.exports = {
       }, function (err) {
         log('[error] failed to call Adunite.init', err)
         cordova.fireWindowEvent("adunite_init_failure", { type: 'init_failure', error: err })
-      }, 'Adunite', 'init', [ unityGameId, enableApplovin ])
+      }, 'Adunite', 'init', [ unityGameId, enableApplovin, adcolonyAppAndZoneId ])
 
     successCallback(this._adsOptions)
   },

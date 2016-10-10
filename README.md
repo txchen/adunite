@@ -39,7 +39,8 @@ adunite.configAds({
       fban: { name: 'fban', pid: 'YOUR_FBAN_PID', weight: 100 },
       unity: { name: 'unity', pid: 'YOUR_UNITY_ADS_GAME_ID', weight: 50, showCooldown: 50 },
       admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
-      applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 100, maxLoadRetry: 15 },
+      applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 70 },
+      adcolony: { name: 'adcolony', pid: 'APPID_ZONEID', weight: 70 },
     }
   }, function (actualAdsOption) {
     // successCallback
@@ -63,6 +64,7 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
     unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
     admob: { name: 'admob', pid: null, weight: 100 },
     applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
+    adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
   },
 }
 ```

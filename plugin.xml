@@ -45,6 +45,16 @@
             <activity android:name="com.applovin.adview.AppLovinInterstitialActivity" />
             <activity android:name="com.applovin.adview.AppLovinConfirmationActivity" />
 
+            <activity android:name="com.jirbo.adcolony.AdColonyOverlay"
+                android:configChanges="keyboardHidden|orientation|screenSize"
+                android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+            <activity android:name="com.jirbo.adcolony.AdColonyFullscreen"
+                android:configChanges="keyboardHidden|orientation|screenSize"
+                android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+            <activity android:name="com.jirbo.adcolony.AdColonyBrowser"
+                android:configChanges="keyboardHidden|orientation|screenSize"
+                android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+
             <meta-data android:name="applovin.sdk.key" android:value="$APPLOVIN_KEY" />
         </config-file>
 
@@ -63,6 +73,7 @@
         <source-file src="src/android/AudienceNetwork.aar" target-dir="libs" framework="true" />
         <source-file src="src/android/unity-ads.aar" target-dir="libs" framework="true" />
         <source-file src="src/android/applovin-sdk-6.2.4.jar" target-dir="libs" framework="true" />
+        <source-file src="src/android/adcolony.jar" target-dir="libs" framework="true" />
         <source-file src="build-extras.gradle" target-dir="."/>
     </platform>
 

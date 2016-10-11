@@ -20,7 +20,7 @@ cordova plugin add cordova-plugin-adunite --save
 Note: applovin sdk read the key from meta data, instead of code. You must define your sdk key in the plugin config, like this in `config.xml`:
 
 ```
-<plugin name="cordova-plugin-adunite" spec="~1.0.8">
+<plugin name="cordova-plugin-adunite" spec="~LATEST_VERSION">
     <variable name="APPLOVIN_KEY" value="YOUR_SECRET_KEY_FROM_DASHBOARD" />
 </plugin>
 ```

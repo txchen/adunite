@@ -380,6 +380,7 @@ public class Adunite extends CordovaPlugin {
     private class AdColonyListener implements AdColonyAdAvailabilityListener, AdColonyAdListener {
         @Override
         public void onAdColonyAdAvailabilityChange(boolean b, String s) {
+            Log.i(LOG_TAG, "adcolony AdAvailabilityChange " + b + " " + s);
             if (b) {
                 sendAdsEventToJs("adcolony", "READY", "");
             }

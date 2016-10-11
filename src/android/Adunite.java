@@ -117,6 +117,7 @@ public class Adunite extends CordovaPlugin {
         }
         // adcolony
         if ((adcolonyAppAndZoneId != null) && (!"".equals(adcolonyAppAndZoneId)) && (!"null".equals(adcolonyAppAndZoneId))) {
+            Log.w(LOG_TAG, "adcolony ads is enabled. appId_zoneId=" + adcolonyAppAndZoneId);
             String[] tokens = adcolonyAppAndZoneId.split("_");
             AdColony.configure(getActivity(), "version:1.0,store:google", tokens[0] /* appid */, tokens[1] /* zoneid */);
             AdColony.addAdAvailabilityListener(new AdColonyListener());

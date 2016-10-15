@@ -86,8 +86,9 @@ module.exports = {
           !this._adsStates.hasOwnProperty(property)) {
         delete this._adsOptions.networks[property]
         delete this._adsStates[property]
+      } else {
+        availableNetworks++
       }
-      availableNetworks++
     }
 
     for (var network in this._adsStates) {

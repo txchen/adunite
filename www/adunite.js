@@ -207,7 +207,7 @@ module.exports = {
     }
     var rand = Math.floor(Math.random() * totalWeight)
     for (var iy = 0; iy < readyOnes.length; iy++) {
-      var curItemWeight = this._adsOptions.networks[readyOnes[i]].weight
+      var curItemWeight = this._adsOptions.networks[readyOnes[iy]].weight
       if (rand < curItemWeight) {
         winner = readyOnes[iy]
         break

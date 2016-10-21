@@ -202,14 +202,14 @@ module.exports = {
     // based on weight, do some random calc
     var totalWeight = 0
     var winner = readyOnes[0]
-    for (var i in readyOnes) {
-      totalWeight += this._adsOptions.networks[readyOnes[i]].weight
+    for (var ix = 0; ix < readyOnes.length; ix++) {
+      totalWeight += this._adsOptions.networks[readyOnes[ix]].weight
     }
     var rand = Math.floor(Math.random() * totalWeight)
-    for (var i in readyOnes) {
+    for (var iy = 0; iy < readyOnes.length; iy++) {
       var curItemWeight = this._adsOptions.networks[readyOnes[i]].weight
       if (rand < curItemWeight) {
-        winner = readyOnes[i]
+        winner = readyOnes[iy]
         break
       }
       rand -= curItemWeight

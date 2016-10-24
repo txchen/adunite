@@ -131,7 +131,10 @@ module.exports = {
               self._loadAds(adsEvent.network_name)
             }
           } else if (adsEvent.event_name === 'FINISH') {
-            // after ads is dismissed, load it again
+            // after ads is dismissed, load it again.
+            // Here also set the lastShow time again, make the show pattern more reasonable
+            self._adsStates[adsEvent.network_name].lastShow = new Date().getTime()
+            self._lastShow = new Date().getTime()
             self._loadAds(adsEvent.network_name)
           }
         } else { // not adsEvent, means first callback when init is done.

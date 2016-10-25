@@ -57,6 +57,7 @@ module.exports = {
       admob: { name: 'admob', pid: null, weight: 100 },
       applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
       adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
+      cb: { name: 'cb', pid: null, weight: 100 },
     },
   },
   _lastShow: 0,
@@ -66,6 +67,7 @@ module.exports = {
     admob: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     applovin: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     adcolony: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
+    cb: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
   },
 
   configAds: function (options, successCallback, errorCallback) {
@@ -110,6 +112,10 @@ module.exports = {
     if (this._adsOptions.networks.adcolony) {
       adcolonyAppAndZoneId = this._adsOptions.networks.adcolony.pid
     }
+    var chartboostAppIdAndSignature = null
+    if (this._adsOptions.networks.cb) {
+      chartboostAppIdAndSignature = this._adsOptions.networks.cb.pid
+    }
 
     var self = this
     cordova.exec(function (adsEvent) {
@@ -147,7 +153,7 @@ module.exports = {
       }, function (err) {
         log('[error] failed to call Adunite.init', err)
         cordova.fireWindowEvent("adunite_init_failure", { type: 'init_failure', error: err })
-      }, 'Adunite', 'init', [ unityGameId, enableApplovin, adcolonyAppAndZoneId ])
+      }, 'Adunite', 'init', [ unityGameId, enableApplovin, adcolonyAppAndZoneId, chartboostAppIdAndSignature ])
 
     successCallback(this._adsOptions)
   },
@@ -223,6 +229,12 @@ module.exports = {
   _loadAds: function (networkName) {
     if (networkName === 'unity') {
       return // no-op, unity ads loading is not controlled by us
+    }
+    if (networkName === 'adcolony') {
+      return // no-op, adcolony ads loading is not controlled by us
+    }
+    if (networkName === 'applovin') {
+      return // no-op, applovin ads loading is not controlled by us
     }
     var self = this
     if (self._adsOptions.networks[networkName]) {

@@ -48,6 +48,11 @@ import com.jirbo.adcolony.AdColonyAdAvailabilityListener;
 import com.jirbo.adcolony.AdColonyAdListener;
 import com.jirbo.adcolony.AdColonyVideoAd;
 
+import com.chartboost.sdk.CBLocation;
+import com.chartboost.sdk.Chartboost;
+import com.chartboost.sdk.ChartboostDelegate;
+import com.chartboost.sdk.Model.CBError;
+
 public class Adunite extends CordovaPlugin {
     private static final String LOG_TAG = "Adunite";
     private CallbackContext _aduniteCallbackContext;
@@ -65,8 +70,7 @@ public class Adunite extends CordovaPlugin {
         } else if (action.equals("init")) {
             // all ads event callback goes to this callback
             _aduniteCallbackContext = callbackContext;
-            initAdunite(callbackContext, data.optString(0), data.optBoolean(1), data.optString(2));
-            //, data.optString(0), data.optBoolean(1), data.optBoolean(2), data.optBoolean(3));
+            initAdunite(callbackContext, data.optString(0), data.optBoolean(1), data.optString(2), data.optString(3));
             PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject());
             result.setKeepCallback(true);
             _aduniteCallbackContext.sendPluginResult(result);
@@ -79,7 +83,8 @@ public class Adunite extends CordovaPlugin {
     }
 
     private void initAdunite(CallbackContext callbackContext,
-            final String unityGameId, final boolean enableApplovin, final String adcolonyAppAndZoneId) {
+            final String unityGameId, final boolean enableApplovin, final String adcolonyAppAndZoneId,
+            final String chartboostAppIdAndSignature) {
         // some sdk requires init before using
         // unity
         if ((unityGameId != null) && (!"".equals(unityGameId)) && (!"null".equals(unityGameId))) {
@@ -122,6 +127,15 @@ public class Adunite extends CordovaPlugin {
             AdColony.configure(getActivity(), "version:1.0,store:google", tokens[0] /* appid */, tokens[1] /* zoneid */);
             AdColony.addAdAvailabilityListener(new AdColonyListener());
         }
+        // chartboost
+        if ((chartboostAppIdAndSignature != null) && (!"".equals(chartboostAppIdAndSignature)) && (!"null".equals(chartboostAppIdAndSignature))) {
+            Log.w(LOG_TAG, "chartboost ads is enabled. appId_signatureId=" + chartboostAppIdAndSignature);
+            String[] tokens = chartboostAppIdAndSignature.split("_");
+            Chartboost.startWithAppId(getActivity(), tokens[0] /* appid */, tokens[1] /* signature */);
+            Chartboost.setDelegate(new MyChartboostListener());
+            Chartboost.setAutoCacheAds(false);
+            Chartboost.onStart(getActivity());
+        }
     }
 
     private boolean loadAds(CallbackContext callbackContext, JSONArray data) {
@@ -138,6 +152,8 @@ public class Adunite extends CordovaPlugin {
             // no op
         } else if ("adcolony".equals(networkName)) {
             // no op
+        } else if ("cb".equals(networkName)) {
+            loadChartboostAds();
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -156,6 +172,8 @@ public class Adunite extends CordovaPlugin {
             showApplovinAds(callbackContext);
         } else if ("adcolony".equals(networkName)) {
             showAdcolonyAds(callbackContext);
+        } else if ("cb".equals(networkName)) {
+            showChartboostAds(callbackContext);
         } else {
             Log.e(LOG_TAG, "adnetwork not supported: " + networkName);
         }
@@ -244,6 +262,23 @@ public class Adunite extends CordovaPlugin {
         Log.i(LOG_TAG, "Trying to show adcolony ads");
         AdColonyVideoAd ad = new AdColonyVideoAd().withListener(new AdColonyListener());
         ad.show();
+    }
+
+    // chartboost
+    private void loadChartboostAds() {
+        Log.i(LOG_TAG, "Trying to load Chartboost ads");
+        Chartboost.cacheInterstitial(CBLocation.LOCATION_DEFAULT);
+    }
+
+    private void showChartboostAds(final CallbackContext callbackContext) {
+        Log.i(LOG_TAG, "Trying to show chartboost ads");
+        if (Chartboost.hasInterstitial(CBLocation.LOCATION_DEFAULT)) {
+            Chartboost.showInterstitial(CBLocation.LOCATION_DEFAULT);
+        } else {
+            Log.e(LOG_TAG, "Chartboost interstitial not ready, cannot show");
+            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "chartboost interstitial not ready, cannot show");
+            callbackContext.sendPluginResult(result);
+        }
     }
 
     private Activity getActivity() {
@@ -403,6 +438,30 @@ public class Adunite extends CordovaPlugin {
         public void onAdColonyAdStarted(AdColonyAd ad)
         {
             sendAdsEventToJs("adcolony", "START", "");
+        }
+    }
+
+    private class MyChartboostListener extends ChartboostDelegate {
+        @Override
+        public void didDisplayInterstitial(String location) {
+            sendAdsEventToJs("cb", "START", location);
+        }
+        // when ads is loaded, this will be called
+        @Override
+        public void didCacheInterstitial(String location) {
+            sendAdsEventToJs("cb", "READY", location);
+        }
+        @Override
+        public void didFailToLoadInterstitial(String location, CBError.CBImpressionError error) {
+            sendAdsEventToJs("cb", "LOADERROR", String.valueOf(error));
+        }
+        @Override
+        public void didDismissInterstitial(String location) {
+            sendAdsEventToJs("cb", "FINISH", location);
+        }
+        @Override
+        public void didClickInterstitial(String location) {
+            sendAdsEventToJs("cb", "CLICK", location);
         }
     }
 }

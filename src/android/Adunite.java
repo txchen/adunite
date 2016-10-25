@@ -129,12 +129,18 @@ public class Adunite extends CordovaPlugin {
         }
         // chartboost
         if ((chartboostAppIdAndSignature != null) && (!"".equals(chartboostAppIdAndSignature)) && (!"null".equals(chartboostAppIdAndSignature))) {
-            Log.w(LOG_TAG, "chartboost ads is enabled. appId_signatureId=" + chartboostAppIdAndSignature);
-            String[] tokens = chartboostAppIdAndSignature.split("_");
-            Chartboost.startWithAppId(getActivity(), tokens[0] /* appid */, tokens[1] /* signature */);
-            Chartboost.setDelegate(new MyChartboostListener());
-            Chartboost.setAutoCacheAds(false);
-            Chartboost.onStart(getActivity());
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.w(LOG_TAG, "chartboost ads is enabled. appId_signatureId=" + chartboostAppIdAndSignature);
+                    String[] tokens = chartboostAppIdAndSignature.split("_");
+                    Chartboost.startWithAppId(getActivity(), tokens[0] /* appid */, tokens[1] /* signature */);
+                    Chartboost.setDelegate(new MyChartboostListener());
+                    Chartboost.setAutoCacheAds(false);
+                    Chartboost.onCreate(getActivity());
+                    Chartboost.onStart(getActivity());
+                }
+            });
         }
     }
 
@@ -266,19 +272,29 @@ public class Adunite extends CordovaPlugin {
 
     // chartboost
     private void loadChartboostAds() {
-        Log.i(LOG_TAG, "Trying to load Chartboost ads");
-        Chartboost.cacheInterstitial(CBLocation.LOCATION_DEFAULT);
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(LOG_TAG, "Trying to load Chartboost ads");
+                Chartboost.cacheInterstitial(CBLocation.LOCATION_DEFAULT);
+            }
+        });
     }
 
     private void showChartboostAds(final CallbackContext callbackContext) {
-        Log.i(LOG_TAG, "Trying to show chartboost ads");
-        if (Chartboost.hasInterstitial(CBLocation.LOCATION_DEFAULT)) {
-            Chartboost.showInterstitial(CBLocation.LOCATION_DEFAULT);
-        } else {
-            Log.e(LOG_TAG, "Chartboost interstitial not ready, cannot show");
-            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "chartboost interstitial not ready, cannot show");
-            callbackContext.sendPluginResult(result);
-        }
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(LOG_TAG, "Trying to show chartboost ads");
+                if (Chartboost.hasInterstitial(CBLocation.LOCATION_DEFAULT)) {
+                    Chartboost.showInterstitial(CBLocation.LOCATION_DEFAULT);
+                } else {
+                    Log.e(LOG_TAG, "Chartboost interstitial not ready, cannot show");
+                    PluginResult result = new PluginResult(PluginResult.Status.ERROR, "chartboost interstitial not ready, cannot show");
+                    callbackContext.sendPluginResult(result);
+                }
+            }
+        });
     }
 
     private Activity getActivity() {

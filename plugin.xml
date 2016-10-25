@@ -6,7 +6,7 @@
     xmlns:m3="http://schemas.microsoft.com/appx/2014/manifest"
     xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
     id="cordova-plugin-adunite"
-    version="1.1.5">
+    version="1.2.0">
 
     <name>AdUnite</name>
     <description>AdUnite plugin</description>
@@ -54,6 +54,12 @@
             <activity android:name="com.jirbo.adcolony.AdColonyBrowser"
                 android:configChanges="keyboardHidden|orientation|screenSize"
                 android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+
+            <activity android:name="com.chartboost.sdk.CBImpressionActivity"
+                android:excludeFromRecents="true"
+                android:hardwareAccelerated="true"
+                android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+                android:configChanges="keyboardHidden|orientation|screenSize" />
 
             <meta-data android:name="applovin.sdk.key" android:value="$APPLOVIN_KEY" />
         </config-file>

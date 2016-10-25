@@ -43,6 +43,7 @@ adunite.configAds({
       admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
       applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 70 },
       adcolony: { name: 'adcolony', pid: 'APPID_ZONEID', weight: 70 },
+      cb: { name: 'cb', pid: 'APPID_APPSIGNATURE', weight: 70 },
     }
   }, function (actualAdsOption) {
     // successCallback
@@ -67,6 +68,7 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
     admob: { name: 'admob', pid: null, weight: 100 },
     applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
     adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
+    cb: { name: 'cb', pid: null, weight: 100 },
   },
 }
 ```

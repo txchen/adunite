@@ -134,9 +134,9 @@ public class Adunite extends CordovaPlugin {
                 public void run() {
                     Log.w(LOG_TAG, "chartboost ads is enabled. appId_signatureId=" + chartboostAppIdAndSignature);
                     String[] tokens = chartboostAppIdAndSignature.split("_");
+                    Chartboost.setAutoCacheAds(false);
                     Chartboost.startWithAppId(getActivity(), tokens[0] /* appid */, tokens[1] /* signature */);
                     Chartboost.setDelegate(new MyChartboostListener());
-                    Chartboost.setAutoCacheAds(false);
                     Chartboost.onCreate(getActivity());
                     Chartboost.onStart(getActivity());
                 }

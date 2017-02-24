@@ -38,9 +38,6 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity
-                android:name="com.facebook.ads.InterstitialAdActivity"
-                android:configChanges="keyboardHidden|orientation|screenSize" />
 
             <activity android:name="com.applovin.adview.AppLovinInterstitialActivity" />
             <activity android:name="com.applovin.adview.AppLovinConfirmationActivity" />
@@ -71,12 +68,10 @@
             <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
 
             <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-            <uses-permission android:name="android.permission.GET_ACCOUNTS" />
         </config-file>
 
         <source-file src="src/android/Adunite.java" target-dir="src/com/adunite/"/>
         <source-file src="src/android/Intenthelper.java" target-dir="src/com/adunite/"/>
-        <source-file src="src/android/AudienceNetwork.aar" target-dir="libs" framework="true" />
         <source-file src="src/android/applovin-sdk-6.2.4.jar" target-dir="libs" framework="true" />
         <source-file src="src/android/adcolony.jar" target-dir="libs" framework="true" />
         <source-file src="src/android/chartboost.jar" target-dir="libs" framework="true" />

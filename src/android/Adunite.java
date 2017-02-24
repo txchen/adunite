@@ -23,11 +23,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.text.format.Formatter;
 
-import com.facebook.ads.Ad;
-import com.facebook.ads.AdError;
-import com.facebook.ads.InterstitialAd;
-import com.facebook.ads.InterstitialAdListener;
-
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 
@@ -65,7 +60,7 @@ public class Adunite extends CordovaPlugin {
         } else if (action.equals("init")) {
             // all ads event callback goes to this callback
             _aduniteCallbackContext = callbackContext;
-            initAdunite(callbackContext, data.optString(0), data.optBoolean(1), data.optString(2), data.optString(3));
+            initAdunite(callbackContext, data.optBoolean(0), data.optString(1), data.optString(2));
             PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject());
             result.setKeepCallback(true);
             _aduniteCallbackContext.sendPluginResult(result);

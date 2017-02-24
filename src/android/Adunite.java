@@ -54,7 +54,6 @@ public class Adunite extends CordovaPlugin {
     private static final String LOG_TAG = "Adunite";
     private CallbackContext _aduniteCallbackContext;
 
-    private InterstitialAd _fbInterstitialAd;
     private com.google.android.gms.ads.InterstitialAd _admobInterstitialAd;
     private AppLovinInterstitialAdDialog _adDialog;
     private volatile boolean _applovinReady = false;
@@ -137,9 +136,7 @@ public class Adunite extends CordovaPlugin {
         final String networkName = data.optString(0);
         final String pid = data.optString(1);
 
-        if ("fban".equals(networkName)) {
-            loadFBAds(pid);
-        } else if ("admob".equals(networkName)) {
+        if ("admob".equals(networkName)) {
             loadAdmobAds(pid);
         } else if ("applovin".equals(networkName)) {
             // no op
@@ -155,9 +152,7 @@ public class Adunite extends CordovaPlugin {
 
     private boolean showAds(CallbackContext callbackContext, JSONArray data) {
         final String networkName = data.optString(0);
-        if ("fban".equals(networkName)) {
-            showFBAds(callbackContext);
-        } else if ("admob".equals(networkName)) {
+        if ("admob".equals(networkName)) {
             showAdmobAds(callbackContext);
         } else if ("applovin".equals(networkName)) {
             showApplovinAds(callbackContext);
@@ -174,28 +169,6 @@ public class Adunite extends CordovaPlugin {
     }
 
     // =========== END of public facing methods ================
-
-    // FBAN
-    private void loadFBAds(final String pid) {
-        Log.i(LOG_TAG, "Trying to load fban ads, pid=" + pid);
-        if (_fbInterstitialAd != null) {
-            _fbInterstitialAd.destroy();
-        }
-        _fbInterstitialAd = new InterstitialAd(getActivity(), pid);
-        _fbInterstitialAd.setAdListener(new FBInterstitialAdListener());
-        _fbInterstitialAd.loadAd();
-    }
-
-    private void showFBAds(CallbackContext callbackContext) {
-        Log.i(LOG_TAG, "Trying to show fban ads");
-        if (_fbInterstitialAd != null) {
-            _fbInterstitialAd.show();
-        } else {
-            Log.e(LOG_TAG, "fban interstitial not ready, cannot show");
-            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "fban interstitial not ready, cannot show");
-            callbackContext.sendPluginResult(result);
-        }
-    }
 
     // Admob
     private void loadAdmobAds(final String pid) {
@@ -302,33 +275,6 @@ public class Adunite extends CordovaPlugin {
             return null;
         }
         return obj;
-    }
-
-    private class FBInterstitialAdListener implements InterstitialAdListener {
-        @Override
-        public void onInterstitialDisplayed(Ad ad) {
-            sendAdsEventToJs("fban", "START", ad.getPlacementId());
-        }
-
-        @Override
-        public void onInterstitialDismissed(Ad ad) {
-            sendAdsEventToJs("fban", "FINISH", ad.getPlacementId());
-        }
-
-        @Override
-        public void onError(Ad ad, AdError error) {
-            sendAdsEventToJs("fban", "LOADERROR", String.valueOf(error.getErrorCode()));
-        }
-
-        @Override
-        public void onAdLoaded(Ad ad) {
-            sendAdsEventToJs("fban", "READY", ad.getPlacementId());
-        }
-
-        @Override
-        public void onAdClicked(Ad ad) {
-            sendAdsEventToJs("fban", "CLICK", ad.getPlacementId());
-        }
     }
 
     private class AdmobAdListener extends AdListener {

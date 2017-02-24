@@ -52,7 +52,6 @@ module.exports = {
     initLastShow: 0,
     maxLoadRetry: -1, // -1 means no limit
     networks: {
-      fban: { name: 'fban', pid: null, weight: 100 },
       admob: { name: 'admob', pid: null, weight: 100 },
       applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
       adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
@@ -61,7 +60,6 @@ module.exports = {
   },
   _lastShow: 0,
   _adsStates: {
-    fban: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     admob: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     applovin: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     adcolony: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },

@@ -3,7 +3,6 @@ ads plugin for cordova app, only support interstitial/video ads type.
 
 Now adunite supports the following networks:
 
-* Facebook Audience Network
 * Admob
 * Applovin
 * Adcolony
@@ -37,7 +36,6 @@ adunite.configAds({
     initLastShow: new Date().getTime(),
     maxLoadRetry: 10,
     networks: {
-      fban: { name: 'fban', pid: 'YOUR_FBAN_PID', weight: 100 },
       admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
       applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 70, showCooldown: 50 },
       adcolony: { name: 'adcolony', pid: 'APPID_ZONEID', weight: 70 },
@@ -61,7 +59,6 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
   initLastShow: 0,
   maxLoadRetry: -1, // -1 means no limit
   networks: {
-    fban: { name: 'fban', pid: null, weight: 100 },
     admob: { name: 'admob', pid: null, weight: 100 },
     applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
     adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
@@ -113,6 +110,9 @@ var readyAds = adunite.getAvailableAds() // will return an array
 ```
 
 ## Changelog
+
+**2017-02-24** `1.4.0`
+Remove FBAN support.
 
 **2017-02-24** `1.3.0`
 Remove UnityAds support.

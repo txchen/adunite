@@ -31,9 +31,6 @@ import com.facebook.ads.InterstitialAdListener;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 
-import com.unity3d.ads.IUnityAdsListener;
-import com.unity3d.ads.UnityAds;
-
 import com.applovin.adview.AppLovinInterstitialAd;
 import com.applovin.adview.AppLovinInterstitialAdDialog;
 import com.applovin.sdk.AppLovinAd;
@@ -58,7 +55,6 @@ public class Adunite extends CordovaPlugin {
     private CallbackContext _aduniteCallbackContext;
 
     private InterstitialAd _fbInterstitialAd;
-    private UnityAdsListener _unityAdsListener;
     private com.google.android.gms.ads.InterstitialAd _admobInterstitialAd;
     private AppLovinInterstitialAdDialog _adDialog;
     private volatile boolean _applovinReady = false;
@@ -83,16 +79,9 @@ public class Adunite extends CordovaPlugin {
     }
 
     private void initAdunite(CallbackContext callbackContext,
-            final String unityGameId, final boolean enableApplovin, final String adcolonyAppAndZoneId,
+            final boolean enableApplovin, final String adcolonyAppAndZoneId,
             final String chartboostAppIdAndSignature) {
         // some sdk requires init before using
-        // unity
-        if ((unityGameId != null) && (!"".equals(unityGameId)) && (!"null".equals(unityGameId))) {
-            Log.w(LOG_TAG, "unity ads is enabled, init it with GameId: " + unityGameId);
-            _unityAdsListener = new UnityAdsListener();
-            UnityAds.setListener(_unityAdsListener);
-            UnityAds.initialize(getActivity(), unityGameId, _unityAdsListener);
-        }
         // applovin
         if (enableApplovin) {
             Log.w(LOG_TAG, "applovin ads is enabled.");
@@ -150,8 +139,6 @@ public class Adunite extends CordovaPlugin {
 
         if ("fban".equals(networkName)) {
             loadFBAds(pid);
-        } else if ("unity".equals(networkName)) {
-            // no op
         } else if ("admob".equals(networkName)) {
             loadAdmobAds(pid);
         } else if ("applovin".equals(networkName)) {
@@ -170,8 +157,6 @@ public class Adunite extends CordovaPlugin {
         final String networkName = data.optString(0);
         if ("fban".equals(networkName)) {
             showFBAds(callbackContext);
-        } else if ("unity".equals(networkName)) {
-            showUnityAds(callbackContext);
         } else if ("admob".equals(networkName)) {
             showAdmobAds(callbackContext);
         } else if ("applovin".equals(networkName)) {
@@ -210,12 +195,6 @@ public class Adunite extends CordovaPlugin {
             PluginResult result = new PluginResult(PluginResult.Status.ERROR, "fban interstitial not ready, cannot show");
             callbackContext.sendPluginResult(result);
         }
-    }
-
-    // Unity
-    // NOTE: unity does not have load method
-    private void showUnityAds(CallbackContext callbackContext) {
-        UnityAds.show(getActivity());
     }
 
     // Admob
@@ -323,29 +302,6 @@ public class Adunite extends CordovaPlugin {
             return null;
         }
         return obj;
-    }
-
-    private class UnityAdsListener implements IUnityAdsListener {
-        @Override
-        public void onUnityAdsReady(final String zoneId) {
-            sendAdsEventToJs("unity", "READY", zoneId);
-        }
-
-        @Override
-        public void onUnityAdsStart(String zoneId) {
-            sendAdsEventToJs("unity", "START", zoneId);
-        }
-
-        @Override
-        public void onUnityAdsFinish(String zoneId, UnityAds.FinishState result) {
-            sendAdsEventToJs("unity", "FINISH", zoneId + " " + result.toString());
-        }
-
-        @Override
-        public void onUnityAdsError(UnityAds.UnityAdsError error, String message) {
-            sendAdsEventToJs("unity", "LOADERROR", error.toString() + "-" + message);
-        }
-        // Unity Ads has no Clicked event
     }
 
     private class FBInterstitialAdListener implements InterstitialAdListener {

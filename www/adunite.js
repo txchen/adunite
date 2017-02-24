@@ -53,7 +53,6 @@ module.exports = {
     maxLoadRetry: -1, // -1 means no limit
     networks: {
       fban: { name: 'fban', pid: null, weight: 100 },
-      unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
       admob: { name: 'admob', pid: null, weight: 100 },
       applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
       adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
@@ -63,7 +62,6 @@ module.exports = {
   _lastShow: 0,
   _adsStates: {
     fban: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
-    unity: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     admob: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     applovin: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
     adcolony: { ready: false, lastShow: 0, lastLoad: 0, loadFailCount: 0 },
@@ -100,10 +98,6 @@ module.exports = {
     log(availableNetworks + ' network(s) available in this session')
 
     // call java init method
-    var unityGameId = null
-    if (this._adsOptions.networks.unity) {
-      unityGameId = this._adsOptions.networks.unity.pid
-    }
     var enableApplovin = false
     if (this._adsOptions.networks.applovin) {
       enableApplovin = true
@@ -153,7 +147,7 @@ module.exports = {
       }, function (err) {
         log('[error] failed to call Adunite.init', err)
         cordova.fireWindowEvent("adunite_init_failure", { type: 'init_failure', error: err })
-      }, 'Adunite', 'init', [ unityGameId, enableApplovin, adcolonyAppAndZoneId, chartboostAppIdAndSignature ])
+      }, 'Adunite', 'init', [ enableApplovin, adcolonyAppAndZoneId, chartboostAppIdAndSignature ])
 
     successCallback(this._adsOptions)
   },
@@ -227,9 +221,6 @@ module.exports = {
   },
 
   _loadAds: function (networkName) {
-    if (networkName === 'unity') {
-      return // no-op, unity ads loading is not controlled by us
-    }
     if (networkName === 'adcolony') {
       return // no-op, adcolony ads loading is not controlled by us
     }

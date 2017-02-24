@@ -5,7 +5,6 @@ Now adunite supports the following networks:
 
 * Facebook Audience Network
 * Admob
-* Unity Ads
 * Applovin
 * Adcolony
 * Chartboost
@@ -39,9 +38,8 @@ adunite.configAds({
     maxLoadRetry: 10,
     networks: {
       fban: { name: 'fban', pid: 'YOUR_FBAN_PID', weight: 100 },
-      unity: { name: 'unity', pid: 'YOUR_UNITY_ADS_GAME_ID', weight: 50, showCooldown: 50 },
       admob: { name: 'admob', pid: 'YOUR_ADMOB_PID', weight: 100, maxLoadRetry: 15 },
-      applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 70 },
+      applovin: { name: 'applovin', pid: 'ANY_STRING', weight: 70, showCooldown: 50 },
       adcolony: { name: 'adcolony', pid: 'APPID_ZONEID', weight: 70 },
       cb: { name: 'cb', pid: 'APPID_APPSIGNATURE', weight: 70 },
     }
@@ -64,7 +62,6 @@ The first argument of `configAds` is your adsOptions. Adunite has a default one 
   maxLoadRetry: -1, // -1 means no limit
   networks: {
     fban: { name: 'fban', pid: null, weight: 100 },
-    unity: { name: 'unity', pid: null, weight: 100, maxLoadRetry: -1 },
     admob: { name: 'admob', pid: null, weight: 100 },
     applovin: { name: 'applovin', pid: null, weight: 100, maxLoadRetry: -1 },
     adcolony: { name: 'adcolony', pid: null, weight: 100, maxLoadRetry: -1 },
@@ -114,3 +111,8 @@ For example, game is over, you want to offer a choice to your user: you can watc
 var readyAds = adunite.getAvailableAds() // will return an array
 // check the array, and optionally render your UI
 ```
+
+## Changelog
+
+**2017-02-24** `1.3.0`
+Remove UnityAds support.

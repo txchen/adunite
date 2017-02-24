@@ -77,7 +77,6 @@
         <source-file src="src/android/Adunite.java" target-dir="src/com/adunite/"/>
         <source-file src="src/android/Intenthelper.java" target-dir="src/com/adunite/"/>
         <source-file src="src/android/AudienceNetwork.aar" target-dir="libs" framework="true" />
-        <source-file src="src/android/unity-ads.aar" target-dir="libs" framework="true" />
         <source-file src="src/android/applovin-sdk-6.2.4.jar" target-dir="libs" framework="true" />
         <source-file src="src/android/adcolony.jar" target-dir="libs" framework="true" />
         <source-file src="src/android/chartboost.jar" target-dir="libs" framework="true" />

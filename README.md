@@ -111,6 +111,9 @@ var readyAds = adunite.getAvailableAds() // will return an array
 
 ## Changelog
 
+**2017-02-25** `1.6.1`
+Add back the get carrier function.
+
 **2017-02-25** `1.6.0`
 Remove READ_PHONE_STATE permission.
 

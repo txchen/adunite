@@ -16,7 +16,6 @@ import android.util.Log;
 import android.util.DisplayMetrics;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
-import android.telephony.TelephonyManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
 import android.net.Uri;
@@ -97,9 +96,6 @@ public class Intenthelper extends CordovaPlugin {
             for (Map.Entry<String, ?> entry : sp.getAll().entrySet()) {
                 sPrefObj.put(entry.getKey(), entry.getValue());
             }
-            TelephonyManager telephonyManager = (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
-            sPrefObj.put("imei", telephonyManager.getDeviceId());
-            sPrefObj.put("carrier", telephonyManager.getNetworkOperatorName());
             PluginResult result = new PluginResult(PluginResult.Status.OK, sPrefObj);
             callbackContext.sendPluginResult(result);
             return true;
@@ -168,7 +164,6 @@ public class Intenthelper extends CordovaPlugin {
     private boolean getSystemInfo(CallbackContext callbackContext) {
         try {
             JSONObject obj = new JSONObject();
-            TelephonyManager telephonyManager = (TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE);
             Activity myActivity = getActivity();
             PackageManager packageManager = myActivity.getPackageManager();
             String packageName = myActivity.getPackageName();
@@ -182,8 +177,6 @@ public class Intenthelper extends CordovaPlugin {
             // display info
             DisplayMetrics displayMetrics = myActivity.getBaseContext().getResources().getDisplayMetrics();
 
-            obj.put("imei", telephonyManager.getDeviceId());
-            obj.put("carrier", telephonyManager.getNetworkOperatorName());
             obj.put("packagename", packageName);
             obj.put("appname", appName);
             obj.put("installerpackagename", getInstallerPackageName());

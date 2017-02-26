@@ -111,6 +111,9 @@ var readyAds = adunite.getAvailableAds() // will return an array
 
 ## Changelog
 
+**2017-02-25** `1.6.0`
+Remove READ_PHONE_STATE permission.
+
 **2017-02-24** `1.5.0`
 Remove permissions that google does not like.
 
